@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteMappingsManager">
+    <list>
+      <list>
+        <remote-mappings server-id="python@sftp://mlpa@220.149.232.144:10022/home/mlpa/anaconda3/envs/LJY/bin/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$/../LJY_Machine_Learning" remote-root="/home/mlpa/Workspace/github/LJY_DS_and_algorithm" />
+            </list>
+          </settings>
+        </remote-mappings>
+      </list>
+    </list>
+  </component>
+</project>
