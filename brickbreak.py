@@ -1,42 +1,97 @@
 # https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=AWXRQm6qfL0DFAUo
 import utils
+import copy
 from itertools import product
 
-def dfs(w, h):
-    return 0
+def find_adj_node(h, w, explosion_value):
+    if explosion_value == 1:
+        return []
+    else:
+        adj_nodes = []
+        # 범위를 벗어날 경우 인접 노드에서 제외
+        for i in range(1,explosion_value):
+            if w + i < W:
+                adj_nodes.append((h,w+i))
+            if w - i >= 0:
+                adj_nodes.append((h,w-i))
+            if h + i < H:
+                adj_nodes.append((h+i,w))
+            if h - i >= 0:
+                adj_nodes.append((h-i, w))
+        return adj_nodes
+
+def dfs(brick, h, w, dfs_visited_list):
+    dfs_stack = []
+    # 해당 블럭의 폭발력을 얻고 0으로 바꿈.
+    explosion_value = brick[h][w]
+    brick[h][w] = 0
+    dfs_visited_list.append((h, w))
+    dfs_stack.extend(find_adj_node(h, w, explosion_value))
+    while dfs_stack:
+        check_point = dfs_stack.pop()
+        if check_point not in dfs_visited_list:
+            dfs(brick, check_point[0], check_point[1], dfs_visited_list)
 
 def calc_explosion(brick, h, w):
+    dfs_visited_list = []
+    dfs(brick, h, w, dfs_visited_list)
 
-    return 0
 def drop_bricks(brick):
-    return 0
-def calc_remained_bricks(brick):
-    return 0
+    for w in range(W):
+        for h in range(H).__reversed__():
+            if brick[h][w] != 0:
+                pass
+            else:
+                for h_offset in range(1, h+1):
+                    if brick[h-h_offset][w] == 0:
+                        pass
+                    else:
+                        brick[h][w] = brick[h-h_offset][w]
+                        brick[h-h_offset][w] = 0
+                        break
 
-def solution(test_case, N, W, H, brick):
+def calc_remained_bricks(brick):
+    num_all_brick = H * W
+    num_zero = 0
+    for h in range(H):
+        num_zero += brick[h].count(0)
+    remained_bricks = num_all_brick - num_zero
+    return remained_bricks
+
+def solution(test_case, N, W, H,ori_brick):
     min_remained_bricks = 9999
+
     # 블록이 가장 적게 남았을 때 얼마나 남았는지 저장. 대충 큰 수로 초기화
     for set in list(product([num for num in range(W)], repeat=N)):
         # 완전 탐색을 위한 중복 순열
-        non_brick_flag = False
-        set_brick = brick.copy()
+        set_brick = copy.deepcopy(ori_brick)
         for i in range(N):
+            if calc_remained_bricks(set_brick) == 0:
+                min_remained_bricks = 0
             # set[i] = 이번 set 이번 단계에서 구슬을 쏜 위치
             w = set[i]
+            is_non_brick = True
             for h in range(H):
                 if set_brick[h][w] != 0:
-                    # 구슬에 맞은 벽돌에 대해
+                    # 구슬에 맞은 벽돌에 대해 같이 터지는 블록들을 계산
                     calc_explosion(set_brick, h, w)
+                    # 폭발이 계산된 후 남는 블록의 개수 계산.
+                    remained_bricks = calc_remained_bricks(set_brick)
+                    if remained_bricks is not 0:
+                        drop_bricks(set_brick)
+                    is_non_brick = False
                     break
-            # 만약 구슬을 쏜 위치에 아무것도 없다면 즉시 break 후 해당 set을 결과에서 제외.
-            non_brick_flag = True
+            if is_non_brick:
+                # 만약 구슬을 쏜 위치에 모든 h가 0이라면 break 후 해당 set을 결과에서 제외하기 위해 flag 저장.
+                break
+        if not is_non_brick :
+            # 구슬을 쏜 위치에 아무것도 없었던 set을 제외하고, 현재 까지 가장 적게 블록이 남은 set일 경우 최소값 갱신
+            if remained_bricks < min_remained_bricks:
+                min_remained_bricks = remained_bricks
+        if min_remained_bricks == 0:
             break
 
-        if non_brick_flag is False:
-            remained_bricks = calc_remained_bricks(set_brick)
-            if remained_bricks < min_remained_bricks :
-                min_remained_bricks = remained_bricks
-    return 0
+    print("#%d %d"%(test_case,min_remained_bricks))
 
 env = utils.Test_envs("brickbreak")
 T = int(env.input[env.case_start_index])
@@ -48,7 +103,6 @@ for test_case in range(T):
     for i in range(H):
         brick.append(list(map(int,env.input[env.case_start_index].split())))
         env.index_up()
-
     answer = env.output[test_case]
     print('-------------')
     solution(test_case, N, W, H, brick)
